@@ -177,18 +177,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- 버거 옵션 화면 렌더링 --- //
     function renderBurgerOptions() {
         const item = state.selectingItem;
-        if (!state.selectingOptions.isSet) {
-            state.selectingOptions.sideOrDessert = null;
-            state.selectingOptions.drink = null;
-        }
         if (!state.selectingOptions.bun) {
             state.selectingOptions.bun = '기본';
             state.selectingOptions.bunPrice = 0;
         }
 
-        // 빵 업그레이드 HTML
+        // --- 빵 업그레이드 HTML (먼저) --- //
         const bunHtml = `
             <div class="option-group">
                 <h3>빵 업그레이드 (필수 선택)</h3>
@@ -205,6 +202,25 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
 
+        // --- 세트 선택 HTML (그 다음) --- //
+        const setDiff = item.set - item.single;
+        const setHtml = `
+            <div class="option-group">
+                <h3>세트 선택 (필수 선택)</h3>
+                <div class="choices">
+                    <button class="choice-btn ${!state.selectingOptions.isSet ? 'selected' : ''}" onclick="selectSet(false)">
+                        <span>단품</span>
+                        <span>+0원</span>
+                    </button>
+                    <button class="choice-btn ${state.selectingOptions.isSet ? 'selected' : ''}" onclick="selectSet(true)">
+                        <span>세트</span>
+                        <span>+${setDiff.toLocaleString()}원</span>
+                    </button>
+                </div>
+            </div>
+        `;
+
+        // --- 세트일 때 사이드/음료 선택 --- //
         let dessertHtml = '';
         if (state.selectingOptions.isSet) {
             dessertHtml += `<div class="option-group"><h3>디저트·치킨 선택</h3><div class="choices">`;
@@ -228,30 +244,70 @@ document.addEventListener('DOMContentLoaded', () => {
                     </button>`;
             });
             dessertHtml += `</div></div>`;
+        } else {
+            state.selectingOptions.sideOrDessert = null;
+            state.selectingOptions.drink = null;
         }
+
+        // --- 옵션 요약 계산 (선택수 / 옵션금액 / 총금액) --- //
+        const basePrice = item.single; // 기준 단품 가격
+        let optionCount = 0;
+        let optionAmount = 0;
+
+        // 빵
+        if (state.selectingOptions.bun) {
+            optionCount++;
+            optionAmount += state.selectingOptions.bunPrice || 0;
+        }
+
+        // 세트 여부
+        if (state.selectingOptions.isSet) {
+            optionCount++;
+            optionAmount += setDiff;
+        }
+
+        const totalPreview = basePrice + optionAmount;
+
+        // --- 옵션 칩 (빵 / 세트) --- //
+        const chipsHtml = `
+            <div class="option-chip">
+                <div class="option-chip-main">
+                    <span class="option-chip-title">빵 ${state.selectingOptions.bun}</span>
+                    <span class="option-chip-price">+${(state.selectingOptions.bunPrice || 0).toLocaleString()}원</span>
+                </div>
+                <button class="option-chip-remove" onclick="resetBun()">×</button>
+            </div>
+            <div class="option-chip">
+                <div class="option-chip-main">
+                    <span class="option-chip-title">${state.selectingOptions.isSet ? '세트' : '단품'}</span>
+                    <span class="option-chip-price">+${state.selectingOptions.isSet ? setDiff.toLocaleString() : '0'}원</span>
+                </div>
+                <button class="option-chip-remove" onclick="resetSet()">×</button>
+            </div>
+        `;
 
         optionsScreen.innerHTML = `
             <header class="main-header"><h2>${item.name}</h2></header>
             <main class="options-main">
-                <div class="option-group">
-                    <h3>세트 선택(필수 선택)</h3>
-                    <div class="choices">
-                        <button class="choice-btn ${!state.selectingOptions.isSet ? 'selected' : ''}" onclick="selectSet(false)">
-                            <span>단품</span>
-                            <span>+0원</span>
-                        </button>
-                        <button class="choice-btn ${state.selectingOptions.isSet ? 'selected' : ''}" onclick="selectSet(true)">
-                            <span>세트</span>
-                            <span>+${(item.set - item.single).toLocaleString()}원</span>
-                        </button>
-                    </div>
-                </div>
                 ${bunHtml}
+                ${setHtml}
                 ${dessertHtml}
             </main>
             <footer class="options-footer">
-                <button class="btn-cancel">취소</button>
-                <button class="btn-add-cart">주문 담기</button>
+                <div class="option-summary-bar">
+                    <div class="option-summary-info">
+                        <span>선택수 ${optionCount}</span>
+                        <span>옵션금액 <strong>${optionAmount.toLocaleString()}원</strong></span>
+                        <span>총 금액 <strong>${totalPreview.toLocaleString()}원</strong></span>
+                    </div>
+                    <div class="option-summary-chips">
+                        ${chipsHtml}
+                    </div>
+                </div>
+                <div class="options-footer-buttons">
+                    <button class="btn-cancel">취소</button>
+                    <button class="btn-add-cart">주문 담기</button>
+                </div>
             </footer>
         `;
 
@@ -259,6 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
         optionsScreen.querySelector('.btn-add-cart').onclick = () => addToCart();
     }
 
+    // --- 세트/사이드/음료/빵 선택 함수 --- //
     window.selectSet = (isSet) => {
         state.selectingOptions.isSet = isSet;
         if (isSet) {
@@ -281,13 +338,22 @@ document.addEventListener('DOMContentLoaded', () => {
         renderBurgerOptions();
     };
 
-    // 빵 선택 함수
     window.selectBun = (bunType, bunPrice) => {
         state.selectingOptions.bun = bunType;
         state.selectingOptions.bunPrice = bunPrice;
         renderBurgerOptions();
     };
 
+    // 옵션 칩에서 X 눌렀을 때
+    window.resetBun = () => {
+        selectBun('기본', 0);
+    };
+
+    window.resetSet = () => {
+        selectSet(false);
+    };
+
+    // --- 장바구니 담기 --- //
     function addToCart() {
         const item = state.selectingItem;
         const options = state.selectingOptions;
@@ -307,7 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 finalPrice = item.single;
             }
 
-            // 빵 업그레이드 가격 추가
+            // 빵 업그레이드 반영
             finalPrice += options.bunPrice || 0;
         } else {
             finalPrice = item.singlePrice;
