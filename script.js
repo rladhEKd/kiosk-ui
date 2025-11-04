@@ -304,11 +304,13 @@ document.addEventListener('DOMContentLoaded', () => {
         renderBurgerOptions();
     };
 
+    // 빵 선택 함수 (옵션 화면에서 사용)
     window.selectBun = (bunType, bunPrice) => {
         state.selectingOptions.bun = bunType;
         state.selectingOptions.bunPrice = bunPrice;
         renderBurgerOptions();
     };
+
 
     // --- 장바구니 담기 --- //
     function addToCart() {
