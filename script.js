@@ -350,79 +350,61 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderCart() {
-        // 장바구니가 비었을 때
-        if (state.order.items.length === 0) {
-            cartContainer.innerHTML = '<p>장바구니가 비어있습니다.</p>';
-            return;
-        }
-    
-        const total = calculateTotal();
-        const totalQty = state.order.items.reduce((acc, item) => acc + item.qty, 0);
-    
-        // 각 아이템 간단 요약(이름 / 옵션 / 수량 / 금액)
-        let listHtml = '';
-        state.order.items.forEach(cartItem => {
-            let optionText = '';
-    
-            if (cartItem.type === 'burger') {
-                const bunText = cartItem.bun ? `, 빵: ${cartItem.bun}` : '';
-                if (cartItem.isSet) {
-                    optionText = `세트 (${cartItem.sideOrDessert.name}, ${cartItem.drink.name}${bunText})`;
-                } else {
-                    optionText = `단품 (${bunText ? bunText.slice(2) : '빵: 기본'})`;
-                }
+    // 장바구니가 비었을 때
+    if (state.order.items.length === 0) {
+        cartContainer.innerHTML = '<p>장바구니가 비어있습니다.</p>';
+        return;
+    }
+
+    const total = calculateTotal();
+    const totalQty = state.order.items.reduce((acc, item) => acc + item.qty, 0);
+
+    // 각 아이템 카드 모양으로 만들기
+    let listHtml = '';
+    state.order.items.forEach(cartItem => {
+        let optionText = '';
+
+        // 버거일 때만 옵션 문구 표시
+        if (cartItem.type === 'burger') {
+            const bunText = cartItem.bun ? `, 빵: ${cartItem.bun}` : '';
+            if (cartItem.isSet) {
+                optionText = `세트 (${cartItem.sideOrDessert.name}, ${cartItem.drink.name}${bunText})`;
+            } else {
+                optionText = `단품 (${bunText ? bunText.slice(2) : '빵: 기본'})`;
             }
-    
-            listHtml += `
-                <div class="cart-item-small">
+        }
+
+        listHtml += `
+            <div class="cart-item-small">
+                <div class="cart-item-main">
                     <div class="item-name">${cartItem.name}</div>
                     ${optionText ? `<div class="item-options">${optionText}</div>` : ''}
+                </div>
+                <div class="cart-item-meta">
                     <div class="item-qty">x ${cartItem.qty}</div>
                     <div class="item-price">${(cartItem.finalPrice * cartItem.qty).toLocaleString()}원</div>
                 </div>
-            `;
-        });
-    
-        cartContainer.innerHTML = `
-            <div class="cart-list">
-                ${listHtml}
             </div>
-            <div class="cart-summary">
-                <span>수량: ${totalQty}개</span>
-                <span>총 금액: ${total.toLocaleString()}원</span>
-            </div>
-            <button class="btn-pay">주문하기</button>
         `;
-    
-        cartContainer.querySelector('.btn-pay').onclick = () => {
-            renderConfirmScreen();
-            showScreen('screen-confirm');
-        };
-    }
+    });
 
+    cartContainer.innerHTML = `
+        <div class="cart-list">
+            ${listHtml}
+        </div>
+        <div class="cart-summary">
+            <span>수량: ${totalQty}개</span>
+            <span>총 금액: ${total.toLocaleString()}원</span>
+        </div>
+        <button class="btn-pay">주문하기</button>
+    `;
 
-    window.changeQuantity = (cartId, delta) => {
-        const cartItem = state.order.items.find(item => item.id === cartId);
-        if (cartItem) {
-            cartItem.qty += delta;
-            if (cartItem.qty <= 0) {
-                removeFromCart(cartId);
-            } else {
-                renderConfirmScreen();
-                renderCart();
-            }
-        }
+    cartContainer.querySelector('.btn-pay').onclick = () => {
+        renderConfirmScreen();
+        showScreen('screen-confirm');
     };
+}
 
-    window.removeFromCart = (cartId) => {
-        state.order.items = state.order.items.filter(item => item.id !== cartId);
-        if (state.order.items.length === 0 && state.currentScreen === 'screen-confirm') {
-            showScreen('screen-menu');
-        } else {
-            renderConfirmScreen();
-        }
-        renderCart();
-    };
 
     function renderConfirmScreen() {
         confirmScreen.innerHTML = '';
