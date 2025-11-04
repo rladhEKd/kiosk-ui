@@ -687,13 +687,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 2000);
     };
 
-    document.getElementById("btn-pay-card").onclick = handlePayment;
-    document.getElementById("btn-pay-cash").onclick = handlePayment;
-    document.getElementById("btn-pay-other").onclick = handlePayment;
-    document.getElementById("btn-pay-points").onclick = () => {
-        alert("포인트 적립 기능은 현재 지원되지 않습니다.");
+    document.getElementById('btn-pay-card').onclick = handlePayment;
+    document.getElementById('btn-pay-cash').onclick = handlePayment;
+    document.getElementById('btn-pay-other').onclick = handlePayment;
+    document.getElementById('btn-pay-points').onclick = () => {
+        alert('포인트 적립 기능은 현재 지원되지 않습니다.');
     };
-
+    document.getElementById('btn-payment-cancel').onclick = () => {
+        showScreen('screen-confirm');   // 주문확인 화면으로 돌아가기
+    };
+    
     // --- 초기화 --- //
     renderCart();
     showScreen("screen-welcome");
