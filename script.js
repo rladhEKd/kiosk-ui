@@ -65,7 +65,8 @@ document.addEventListener('DOMContentLoaded', () => {
             sideOrDessert: null,
             drink: null,
             bun: "기본",
-            bunPrice: 0
+            bunPrice: 0,
+            seasoning: null,
         }
     };
 
@@ -120,7 +121,8 @@ document.addEventListener('DOMContentLoaded', () => {
             sideOrDessert: null,
             drink: null,
             bun: "기본",
-            bunPrice: 0
+            bunPrice: 0,
+            seasoning: null,
         };
         renderCart();
         showScreen("screen-welcome");
@@ -171,12 +173,17 @@ document.addEventListener('DOMContentLoaded', () => {
             sideOrDessert: null,
             drink: null,
             bun: "기본",
-            bunPrice: 0
+            bunPrice: 0,
+            seasoning: null,
         };
 
-        if (categoryKey === "burger") {
+        if (categoryKey === 'burger') {
             renderBurgerOptions();
-            showScreen("screen-options");
+            showScreen('screen-options');
+        } else if (categoryKey === 'dessertChicken' && item.name === '양념감자') {
+            // 디저트 양념감자 시즈닝 선택 화면
+            renderDessertSeasoningOptions();
+            showScreen('screen-options');
         } else {
             addToCart();
         }
@@ -185,97 +192,116 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 버거 옵션 화면 --- //
     function renderBurgerOptions() {
         const item = state.selectingItem;
-
-        // 안전한 기본값
+    
         if (!state.selectingOptions.bun) {
-            state.selectingOptions.bun = "기본";
+            state.selectingOptions.bun = '기본';
             state.selectingOptions.bunPrice = 0;
         }
         if (!state.selectingOptions.isSet) {
             state.selectingOptions.sideOrDessert = null;
             state.selectingOptions.drink = null;
         }
-
-        // 빵 업그레이드 (먼저)
+    
+        // --- 빵 업그레이드 --- //
         const bunHtml = `
             <div class="option-group">
                 <h3>빵 업그레이드 (필수 선택)</h3>
                 <div class="choices">
-                    <button class="choice-btn ${state.selectingOptions.bun === "기본" ? "selected" : ""}" onclick="selectBun('기본', 0)">
+                    <button class="choice-btn ${state.selectingOptions.bun === '기본' ? 'selected' : ''}" onclick="selectBun('기본', 0)">
                         <span>변경안함</span>
                         <span>+0원</span>
                     </button>
-                    <button class="choice-btn ${state.selectingOptions.bun === "버터번" ? "selected" : ""}" onclick="selectBun('버터번', 500)">
+                    <button class="choice-btn ${state.selectingOptions.bun === '버터번' ? 'selected' : ''}" onclick="selectBun('버터번', 500)">
                         <span>버터번</span>
                         <span>+500원</span>
                     </button>
                 </div>
             </div>
         `;
-
-        // 세트 선택
+    
+        // --- 세트 선택 --- //
         const setDiff = item.set - item.single;
         const setHtml = `
             <div class="option-group">
                 <h3>세트 선택 (필수 선택)</h3>
                 <div class="choices">
-                    <button class="choice-btn ${!state.selectingOptions.isSet ? "selected" : ""}" onclick="selectSet(false)">
+                    <button class="choice-btn ${!state.selectingOptions.isSet ? 'selected' : ''}" onclick="selectSet(false)">
                         <span>단품</span>
                         <span>+0원</span>
                     </button>
-                    <button class="choice-btn ${state.selectingOptions.isSet ? "selected" : ""}" onclick="selectSet(true)">
+                    <button class="choice-btn ${state.selectingOptions.isSet ? 'selected' : ''}" onclick="selectSet(true)">
                         <span>세트</span>
                         <span>+${setDiff.toLocaleString()}원</span>
                     </button>
                 </div>
             </div>
         `;
-
-        // 세트일 때만 디저트/음료
-        let dessertHtml = "";
+    
+        // --- 세트일 때 디저트/음료 --- //
+        let dessertHtml = '';
         if (state.selectingOptions.isSet) {
             dessertHtml += `<div class="option-group"><h3>디저트·치킨 선택</h3><div class="choices">`;
             menuData.dessertChicken.forEach(d => {
-                const isSelected =
-                    state.selectingOptions.sideOrDessert?.name === d.name;
+                const isSelected = state.selectingOptions.sideOrDessert?.name === d.name;
                 dessertHtml += `
-                    <button class="choice-btn ${isSelected ? "selected" : ""}" onclick="selectSideOrDrink('sideOrDessert', '${d.name}')">
+                    <button class="choice-btn ${isSelected ? 'selected' : ''}" onclick="selectSideOrDrink('sideOrDessert', '${d.name}')">
                         <span>${d.name}</span>
                         <span>+${d.setUpcharge.toLocaleString()}원</span>
                     </button>`;
             });
             dessertHtml += `</div></div>`;
-
+    
             dessertHtml += `<div class="option-group"><h3>음료·커피 선택</h3><div class="choices">`;
             menuData.drinkCoffee.forEach(d => {
-                const isSelected =
-                    state.selectingOptions.drink?.name === d.name;
+                const isSelected = state.selectingOptions.drink?.name === d.name;
                 dessertHtml += `
-                    <button class="choice-btn ${isSelected ? "selected" : ""}" onclick="selectSideOrDrink('drink', '${d.name}')">
+                    <button class="choice-btn ${isSelected ? 'selected' : ''}" onclick="selectSideOrDrink('drink', '${d.name}')">
                         <span>${d.name}</span>
                         <span>+${d.setUpcharge.toLocaleString()}원</span>
                     </button>`;
             });
             dessertHtml += `</div></div>`;
         }
-
+    
+        // --- 양념감자 선택 시 시즈닝 옵션 --- //
+        let seasoningHtml = '';
+        if (
+            state.selectingOptions.isSet &&
+            state.selectingOptions.sideOrDessert &&
+            state.selectingOptions.sideOrDessert.name === '양념감자'
+        ) {
+            if (!state.selectingOptions.seasoning) {
+                state.selectingOptions.seasoning = '어니언';
+            }
+            const options = ['어니언', '치즈', '칠리'];
+            seasoningHtml += `<div class="option-group"><h3>시즈닝 선택</h3><div class="choices">`;
+            options.forEach(s => {
+                const selected = state.selectingOptions.seasoning === s ? 'selected' : '';
+                seasoningHtml += `
+                    <button class="choice-btn ${selected}" onclick="selectSeasoning('${s}')">
+                        <span>${s}</span>
+                        <span>+0원</span>
+                    </button>`;
+            });
+            seasoningHtml += `</div></div>`;
+        }
+    
         optionsScreen.innerHTML = `
             <header class="main-header"><h2>${item.name}</h2></header>
             <main class="options-main">
                 ${bunHtml}
                 ${setHtml}
                 ${dessertHtml}
+                ${seasoningHtml}
             </main>
             <footer class="options-footer">
                 <button class="btn-cancel">취소</button>
                 <button class="btn-add-cart">주문 담기</button>
             </footer>
         `;
-
-        optionsScreen.querySelector(".btn-cancel").onclick = () =>
-            showScreen("screen-menu");
-        optionsScreen.querySelector(".btn-add-cart").onclick = () =>
-            addToCart();
+    
+        optionsScreen.querySelector('.btn-cancel').onclick = () => showScreen('screen-menu');
+        optionsScreen.querySelector('.btn-add-cart').onclick = () => addToCart();
     }
 
     // --- 옵션 선택 함수들 (전역으로 노출) --- //
@@ -304,6 +330,17 @@ document.addEventListener('DOMContentLoaded', () => {
         renderBurgerOptions();
     };
 
+    window.selectSeasoning = (type) => {
+        state.selectingOptions.seasoning = type;
+        if (!state.selectingItem) return;
+    
+        if (state.selectingItem.type === 'burger') {
+            renderBurgerOptions();
+        } else if (state.selectingItem.type === 'dessertChicken') {
+            renderDessertSeasoningOptions();
+        }
+    };
+
     // 빵 선택 함수 (옵션 화면에서 사용)
     window.selectBun = (bunType, bunPrice) => {
         state.selectingOptions.bun = bunType;
@@ -311,32 +348,71 @@ document.addEventListener('DOMContentLoaded', () => {
         renderBurgerOptions();
     };
 
+    function renderDessertSeasoningOptions() {
+        const item = state.selectingItem;
+        if (!state.selectingOptions.seasoning) {
+            state.selectingOptions.seasoning = '어니언';
+        }
+        const options = ['어니언', '치즈', '칠리'];
+        let seasoningHtml = `<div class="option-group"><h3>시즈닝 선택</h3><div class="choices">`;
+        options.forEach(s => {
+            const selected = state.selectingOptions.seasoning === s ? 'selected' : '';
+            seasoningHtml += `
+                <button class="choice-btn ${selected}" onclick="selectSeasoning('${s}')">
+                    <span>${s}</span>
+                    <span>+0원</span>
+                </button>`;
+        });
+        seasoningHtml += `</div></div>`;
+    
+        optionsScreen.innerHTML = `
+            <header class="main-header"><h2>${item.name}</h2></header>
+            <main class="options-main">
+                ${seasoningHtml}
+            </main>
+            <footer class="options-footer">
+                <button class="btn-cancel">취소</button>
+                <button class="btn-add-cart">주문 담기</button>
+            </footer>
+        `;
+    
+        optionsScreen.querySelector('.btn-cancel').onclick = () => showScreen('screen-menu');
+        optionsScreen.querySelector('.btn-add-cart').onclick = () => addToCart();
+    }
 
+    
     // --- 장바구니 담기 --- //
     function addToCart() {
         const item = state.selectingItem;
         const options = state.selectingOptions;
-
+    
         let finalPrice;
         let name = item.name;
-
-        if (item.type === "burger") {
+    
+        if (item.type === 'burger') {
             if (options.isSet) {
                 if (!options.sideOrDessert || !options.drink) {
                     alert("디저트와 음료를 선택해주세요.");
                     return;
                 }
-                finalPrice =
-                    item.set +
-                    options.sideOrDessert.setUpcharge +
-                    options.drink.setUpcharge;
-                name += " 세트";
+                // 세트에서 양념감자면 시즈닝 필수
+                if (options.sideOrDessert.name === '양념감자' && !options.seasoning) {
+                    alert("양념감자 시즈닝을 선택해주세요.");
+                    return;
+                }
+                finalPrice = item.set + options.sideOrDessert.setUpcharge + options.drink.setUpcharge;
+                name += ' 세트';
             } else {
                 finalPrice = item.single;
             }
-
+            // 빵 업그레이드
             finalPrice += options.bunPrice || 0;
         } else {
+            // 디저트/음료
+            if (item.type === 'dessertChicken' && item.name === '양념감자' && !options.seasoning) {
+                alert("양념감자 시즈닝을 선택해주세요.");
+                return;
+            }
             finalPrice = item.singlePrice;
         }
 
@@ -365,6 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 drink: options.drink,
                 bun: options.bun,
                 bunPrice: options.bunPrice || 0,
+                seasoning: options.seasoning || null,
                 qty: 1,
                 basePrice:
                     item.type === "burger"
@@ -389,7 +466,8 @@ document.addEventListener('DOMContentLoaded', () => {
             sideOrDessert: null,
             drink: null,
             bun: "기본",
-            bunPrice: 0
+            bunPrice: 0,
+            seasoning: null,
         };
     }
 
@@ -416,32 +494,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let listHtml = "";
         state.order.items.forEach(cartItem => {
-            let optionText = "";
+            let optionText = '';
 
-            if (cartItem.type === "burger") {
-                const bunText = cartItem.bun ? `, 빵: ${cartItem.bun}` : "";
-                if (cartItem.isSet) {
-                    optionText = `세트 (${cartItem.sideOrDessert.name}, ${cartItem.drink.name}${bunText})`;
-                } else {
-                    optionText = `단품 (${bunText ? bunText.slice(2) : "빵: 기본"})`;
+            if (cartItem.type === 'burger') {
+                const bunText = cartItem.bun ? `, 빵: ${cartItem.bun}` : '';
+                let sideName = cartItem.sideOrDessert ? cartItem.sideOrDessert.name : '';
+            
+                if (
+                    cartItem.isSet &&
+                    cartItem.sideOrDessert &&
+                    cartItem.sideOrDessert.name === '양념감자' &&
+                    cartItem.seasoning
+                ) {
+                    sideName += `(${cartItem.seasoning})`;
                 }
+            
+                if (cartItem.isSet) {
+                    optionText = `세트 (${sideName}, ${cartItem.drink.name}${bunText})`;
+                } else {
+                    optionText = `단품 (${bunText ? bunText.slice(2) : '빵: 기본'})`;
+                }
+            } else if (cartItem.type === 'dessertChicken' && cartItem.seasoning) {
+                optionText = `시즈닝: ${cartItem.seasoning}`;
             }
 
             listHtml += `
                 <div class="cart-item-small">
                     <div class="cart-item-main">
                         <div class="item-name">${cartItem.name}</div>
-                        ${
-                            optionText
-                                ? `<div class="item-options">${optionText}</div>`
-                                : ""
-                        }
+                        ${optionText ? `<div class="item-options">${optionText}</div>` : ''}
                     </div>
                     <div class="cart-item-meta">
-                        <div class="item-qty">x ${cartItem.qty}</div>
-                        <div class="item-price">${(
-                            cartItem.finalPrice * cartItem.qty
-                        ).toLocaleString()}원</div>
+                        <div class="cart-item-controls">
+                            <button onclick="changeQuantity(${cartItem.id}, -1)">-</button>
+                            <span>${cartItem.qty}</span>
+                            <button onclick="changeQuantity(${cartItem.id}, 1)">+</button>
+                            <button class="cart-remove" onclick="removeFromCart(${cartItem.id})">×</button>
+                        </div>
+                        <div class="item-price">${(cartItem.finalPrice * cartItem.qty).toLocaleString()}원</div>
                     </div>
                 </div>
             `;
@@ -500,18 +590,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let listHtml = "";
         state.order.items.forEach(cartItem => {
-            let optionText;
-            if (cartItem.type === "burger") {
-                const bunText = cartItem.bun ? `, 빵: ${cartItem.bun}` : "";
-                if (cartItem.isSet) {
-                    optionText = `세트 (${cartItem.sideOrDessert.name}, ${cartItem.drink.name}${bunText})`;
-                } else {
-                    optionText = `단품 (${
-                        bunText ? bunText.slice(2) : "빵: 기본"
-                    })`;
+            let optionText = '';
+
+            if (cartItem.type === 'burger') {
+                const bunText = cartItem.bun ? `, 빵: ${cartItem.bun}` : '';
+                let sideName = cartItem.sideOrDessert ? cartItem.sideOrDessert.name : '';
+            
+                if (
+                    cartItem.isSet &&
+                    cartItem.sideOrDessert &&
+                    cartItem.sideOrDessert.name === '양념감자' &&
+                    cartItem.seasoning
+                ) {
+                    sideName += `(${cartItem.seasoning})`;
                 }
-            } else {
-                optionText = cartItem.isSet ? "세트" : "단품";
+            
+                if (cartItem.isSet) {
+                    optionText = `세트 (${sideName}, ${cartItem.drink.name}${bunText})`;
+                } else {
+                    optionText = `단품 (${bunText ? bunText.slice(2) : '빵: 기본'})`;
+                }
+            } else if (cartItem.type === 'dessertChicken' && cartItem.seasoning) {
+                optionText = `시즈닝: ${cartItem.seasoning}`;
             }
 
             listHtml += `
