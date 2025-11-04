@@ -149,15 +149,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderItems(categoryKey) {
-        itemsGrid.innerHTML = "";
+        itemsGrid.innerHTML = '';
         const items = menuData[categoryKey];
         items.forEach(item => {
-            const card = document.createElement("div");
-            card.className = "item-card";
-            const price =
-                item.single !== undefined ? item.single : item.singlePrice;
+            const card = document.createElement('div');
+            card.className = 'item-card';
+            const price = item.single !== undefined ? item.single : item.singlePrice;
             card.innerHTML = `
-                <img src="https://via.placeholder.com/150x100.png?text=${item.name}" alt="${item.name}">
                 <div class="item-name">${item.name}</div>
                 <div class="item-price">${price.toLocaleString()}원</div>
             `;
@@ -165,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
             itemsGrid.appendChild(card);
         });
     }
-
+    
     function selectItem(item, categoryKey) {
         state.selectingItem = { ...item, type: categoryKey };
         state.selectingOptions = {
