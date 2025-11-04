@@ -18,12 +18,12 @@ document.addEventListener('DOMContentLoaded', () => {
             {"name": "치즈스틱", "singlePrice": 4400, "setUpcharge": 700},
             {"name": "통오징어링", "singlePrice": 1500, "setUpcharge": 1500},
             {"name": "지파이 오리지널", "singlePrice": 1500, "setUpcharge": 1500},
-            {"name": "지파이 초코맛", "singlePrice": 1500, "setUpcharge": 1500},
-            {"name": "콘샐러드", "singlePrice": 1200, "setUpcharge": 1200},
-            {"name": "롱치즈스틱", "singlePrice": 1200, "setUpcharge": 1200},
-            {"name": "엑스치즈스틱", "singlePrice": 1200, "setUpcharge": 1200},
-            {"name": "토네이도 망고젤리", "singlePrice": 3600, "setUpcharge": 1100},
-            {"name": "토네이도 초코", "singlePrice": 3600, "setUpcharge": 1100}
+            {"name": "못난이 치즈감자", "singlePrice": 1500, "setUpcharge": 1500},
+            {"name": "코울슬로", "singlePrice": 1200, "setUpcharge": 0},
+            {"name": "롱치즈스틱", "singlePrice": 1200, "setUpcharge": 400},
+            {"name": "치킨너겟", "singlePrice": 1200, "setUpcharge": 1100},
+            {"name": "토네이도 망고젤리", "singlePrice": 3600, "setUpcharge": 1400},
+            {"name": "토네이도 초코쿠키", "singlePrice": 3600, "setUpcharge": 1400}
         ],
         "drinkCoffee": [
             {"name": "펩시콜라(R)", "singlePrice": 3200, "setUpcharge": 0},
@@ -32,7 +32,6 @@ document.addEventListener('DOMContentLoaded', () => {
             {"name": "펩시콜라(L)", "singlePrice": 3600, "setUpcharge": 200},
             {"name": "칠성사이다(L)", "singlePrice": 3600, "setUpcharge": 200},
             {"name": "펩시제로(L)", "singlePrice": 3600, "setUpcharge": 200},
-            {"name": "망고젤리쿨러", "singlePrice": 4500, "setUpcharge": 900},
             {"name": "아메리카노", "singlePrice": 4000, "setUpcharge": 500},
             {"name": "아이스아메리카노(R)", "singlePrice": 4200, "setUpcharge": 500},
             {"name": "아이스아메리카노(L)", "singlePrice": 4800, "setUpcharge": 1000},
@@ -40,7 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
             {"name": "아이스티(L)", "singlePrice": 3600, "setUpcharge": 600},
             {"name": "레몬에이드(R)", "singlePrice": 4500, "setUpcharge": 700},
             {"name": "레몬에이드(L)", "singlePrice": 5000, "setUpcharge": 900},
-            {"name": "아이스에코", "singlePrice": 2000, "setUpcharge": 500},
             {"name": "카페라떼(핫)", "singlePrice": 4500, "setUpcharge": 1200},
             {"name": "카페라떼(아이스)", "singlePrice": 4700, "setUpcharge": 1200}
         ]
@@ -62,11 +60,13 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         orderIdCounter: 0,
         // 옵션 선택을 위한 임시 상태
-        selectingItem: null, 
+        selectingItem: null,
         selectingOptions: {
             isSet: false,
             sideOrDessert: null,
             drink: null,
+            bun: '기본',
+            bunPrice: 0,
         }
     };
 
@@ -107,13 +107,19 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(resetAndGoHome, 5000);
         }
     }
-    
+
     function resetAndGoHome() {
         // state 초기화
         state.order = { items: [], totalPrice: 0 };
         state.orderIdCounter = 0;
         state.selectingItem = null;
-        state.selectingOptions = { isSet: false, sideOrDessert: null, drink: null };
+        state.selectingOptions = {
+            isSet: false,
+            sideOrDessert: null,
+            drink: null,
+            bun: '기본',
+            bunPrice: 0,
+        };
         renderCart();
         showScreen('screen-welcome');
     }
@@ -151,11 +157,17 @@ document.addEventListener('DOMContentLoaded', () => {
             itemsGrid.appendChild(card);
         });
     }
-    
+
     function selectItem(item, categoryKey) {
         state.selectingItem = { ...item, type: categoryKey };
-        state.selectingOptions = { isSet: false, sideOrDessert: null, drink: null }; // Reset options
-        
+        state.selectingOptions = {
+            isSet: false,
+            sideOrDessert: null,
+            drink: null,
+            bun: '기본',
+            bunPrice: 0,
+        }; // Reset options
+
         if (categoryKey === 'burger') {
             renderBurgerOptions();
             showScreen('screen-options');
@@ -171,6 +183,27 @@ document.addEventListener('DOMContentLoaded', () => {
             state.selectingOptions.sideOrDessert = null;
             state.selectingOptions.drink = null;
         }
+        if (!state.selectingOptions.bun) {
+            state.selectingOptions.bun = '기본';
+            state.selectingOptions.bunPrice = 0;
+        }
+
+        // 빵 업그레이드 HTML
+        const bunHtml = `
+            <div class="option-group">
+                <h3>빵 업그레이드 (필수 선택)</h3>
+                <div class="choices">
+                    <button class="choice-btn ${state.selectingOptions.bun === '기본' ? 'selected' : ''}" onclick="selectBun('기본', 0)">
+                        <span>변경안함</span>
+                        <span>+0원</span>
+                    </button>
+                    <button class="choice-btn ${state.selectingOptions.bun === '버터번' ? 'selected' : ''}" onclick="selectBun('버터번', 500)">
+                        <span>버터번</span>
+                        <span>+500원</span>
+                    </button>
+                </div>
+            </div>
+        `;
 
         let dessertHtml = '';
         if (state.selectingOptions.isSet) {
@@ -201,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <header class="main-header"><h2>${item.name}</h2></header>
             <main class="options-main">
                 <div class="option-group">
-                    <h3>세트 선택</h3>
+                    <h3>세트 선택(필수 선택)</h3>
                     <div class="choices">
                         <button class="choice-btn ${!state.selectingOptions.isSet ? 'selected' : ''}" onclick="selectSet(false)">
                             <span>단품</span>
@@ -213,6 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </button>
                     </div>
                 </div>
+                ${bunHtml}
                 ${dessertHtml}
             </main>
             <footer class="options-footer">
@@ -234,6 +268,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!state.selectingOptions.drink) {
                 state.selectingOptions.drink = menuData.drinkCoffee[0];
             }
+        } else {
+            state.selectingOptions.sideOrDessert = null;
+            state.selectingOptions.drink = null;
         }
         renderBurgerOptions();
     };
@@ -241,6 +278,13 @@ document.addEventListener('DOMContentLoaded', () => {
     window.selectSideOrDrink = (type, name) => {
         const categoryKey = type === 'sideOrDessert' ? 'dessertChicken' : 'drinkCoffee';
         state.selectingOptions[type] = menuData[categoryKey].find(i => i.name === name);
+        renderBurgerOptions();
+    };
+
+    // 빵 선택 함수
+    window.selectBun = (bunType, bunPrice) => {
+        state.selectingOptions.bun = bunType;
+        state.selectingOptions.bunPrice = bunPrice;
         renderBurgerOptions();
     };
 
@@ -262,6 +306,9 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 finalPrice = item.single;
             }
+
+            // 빵 업그레이드 가격 추가
+            finalPrice += options.bunPrice || 0;
         } else {
             finalPrice = item.singlePrice;
         }
@@ -270,8 +317,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (item.type !== 'burger') return cartItem.name === item.name;
             if (cartItem.originalItemName !== item.name) return false;
             if (cartItem.isSet !== options.isSet) return false;
+            if (cartItem.bun !== options.bun) return false;
             if (!cartItem.isSet) return true;
-            return cartItem.sideOrDessert.name === options.sideOrDessert.name && cartItem.drink.name === options.drink.name;
+            return (
+                cartItem.sideOrDessert.name === options.sideOrDessert.name &&
+                cartItem.drink.name === options.drink.name
+            );
         });
 
         if (existingItem) {
@@ -285,6 +336,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 isSet: options.isSet,
                 sideOrDessert: options.sideOrDessert,
                 drink: options.drink,
+                bun: options.bun,
+                bunPrice: options.bunPrice || 0,
                 qty: 1,
                 basePrice: item.type === 'burger' ? (options.isSet ? item.set : item.single) : item.singlePrice,
                 finalPrice: finalPrice,
@@ -299,7 +352,13 @@ document.addEventListener('DOMContentLoaded', () => {
         renderCart();
         showScreen('screen-menu');
         state.selectingItem = null;
-        state.selectingOptions = { isSet: false, sideOrDessert: null, drink: null };
+        state.selectingOptions = {
+            isSet: false,
+            sideOrDessert: null,
+            drink: null,
+            bun: '기본',
+            bunPrice: 0,
+        };
     }
 
     function calculateTotal() {
@@ -327,7 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showScreen('screen-confirm');
         };
     }
-    
+
     window.changeQuantity = (cartId, delta) => {
         const cartItem = state.order.items.find(item => item.id === cartId);
         if (cartItem) {
@@ -339,7 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderCart();
             }
         }
-    }
+    };
 
     window.removeFromCart = (cartId) => {
         state.order.items = state.order.items.filter(item => item.id !== cartId);
@@ -349,7 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderConfirmScreen();
         }
         renderCart();
-    }
+    };
 
     function renderConfirmScreen() {
         confirmScreen.innerHTML = '';
@@ -360,7 +419,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let listHtml = '';
         state.order.items.forEach(cartItem => {
-            let optionText = cartItem.isSet ? `세트 (${cartItem.sideOrDessert.name}, ${cartItem.drink.name})` : '단품';
+            let optionText;
+            if (cartItem.type === 'burger') {
+                const bunText = cartItem.bun ? `, 빵: ${cartItem.bun}` : '';
+                if (cartItem.isSet) {
+                    optionText = `세트 (${cartItem.sideOrDessert.name}, ${cartItem.drink.name}${bunText})`;
+                } else {
+                    optionText = `단품 (${bunText ? bunText.slice(2) : '빵: 기본'})`;
+                }
+            } else {
+                optionText = cartItem.isSet ? '세트' : '단품';
+            }
+
             listHtml += `
                 <div class="confirm-item">
                     <div class="item-info">
@@ -394,7 +464,7 @@ document.addEventListener('DOMContentLoaded', () => {
         confirmScreen.querySelector('#btn-confirm-pay').onclick = () => {
             document.querySelector('#screen-payment .total-amount').textContent = `${calculateTotal().toLocaleString()}원`;
             showScreen('screen-payment');
-        }
+        };
     }
 
     // --- 이벤트 리스너 --- //
@@ -411,7 +481,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderCategories();
         renderItems('burger');
     };
-    
+
     document.querySelectorAll('.btn-home').forEach(btn => {
         btn.onclick = resetAndGoHome;
     });
