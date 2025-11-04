@@ -433,25 +433,56 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderCart() {
+        // 장바구니가 비었을 때
         if (state.order.items.length === 0) {
             cartContainer.innerHTML = '<p>장바구니가 비어있습니다.</p>';
             return;
         }
+    
         const total = calculateTotal();
         const totalQty = state.order.items.reduce((acc, item) => acc + item.qty, 0);
-
+    
+        // 각 아이템 간단 요약(이름 / 옵션 / 수량 / 금액)
+        let listHtml = '';
+        state.order.items.forEach(cartItem => {
+            let optionText = '';
+    
+            if (cartItem.type === 'burger') {
+                const bunText = cartItem.bun ? `, 빵: ${cartItem.bun}` : '';
+                if (cartItem.isSet) {
+                    optionText = `세트 (${cartItem.sideOrDessert.name}, ${cartItem.drink.name}${bunText})`;
+                } else {
+                    optionText = `단품 (${bunText ? bunText.slice(2) : '빵: 기본'})`;
+                }
+            }
+    
+            listHtml += `
+                <div class="cart-item-small">
+                    <div class="item-name">${cartItem.name}</div>
+                    ${optionText ? `<div class="item-options">${optionText}</div>` : ''}
+                    <div class="item-qty">x ${cartItem.qty}</div>
+                    <div class="item-price">${(cartItem.finalPrice * cartItem.qty).toLocaleString()}원</div>
+                </div>
+            `;
+        });
+    
         cartContainer.innerHTML = `
+            <div class="cart-list">
+                ${listHtml}
+            </div>
             <div class="cart-summary">
                 <span>수량: ${totalQty}개</span>
                 <span>총 금액: ${total.toLocaleString()}원</span>
             </div>
             <button class="btn-pay">주문하기</button>
         `;
+    
         cartContainer.querySelector('.btn-pay').onclick = () => {
             renderConfirmScreen();
             showScreen('screen-confirm');
         };
     }
+
 
     window.changeQuantity = (cartId, delta) => {
         const cartItem = state.order.items.find(item => item.id === cartId);
