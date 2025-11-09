@@ -207,15 +207,16 @@ body, html {
 }
 
 .item-card .item-name {
-    font-size: 18px;
-    font-weight: bold;
-    margin: 10px 0 5px;
+    font-size: 20px;      /* ← 카테고리와 동일 크기 */
+    font-weight: bold;    /* ← 이미 굵게지만 한번 더 명시 */
+    margin: 10px 0 4px;   /* 아래 여백은 살짝만 두기 */
 }
 
 .item-card .item-price {
     font-size: 16px;
     color: #D50000;
     font-weight: bold;
+    margin-top: 8px;   /* ← 이름과 가격 사이에 여유 주기 */
 }
 
 /* 하단 장바구니 */
