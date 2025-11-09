@@ -2,14 +2,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 데이터 --- //
     const menuData = {
         burger: [
-            { name: "리아 불고기버거", single: 4800, set: 7100, desc: "달콤짭짤한 불고기 소스" },
+            { name: "리아불고기", single: 4800, set: 7100, desc: "달콤짭짤한 불고기 소스" },
             { name: "데리버거", single: 3500, set: 5900, desc: "데리야끼 소스 버거" },
-            { name: "새우버거", single: 4800, set: 7100, desc: "새우살 가득한 패티" },
+            { name: "리아새우", single: 4800, set: 7100, desc: "새우살 가득한 패티" },
             { name: "핫크리스피 치킨버거", single: 6000, set: 8100, desc: "매콤하고 바삭한 치킨패티" },
-            { name: "클래식 치즈버거", single: 5300, set: 7500, desc: "기본 치즈버거" },
-            { name: "더블 클래식 치즈버거", single: 7000, set: 9000, desc: "패티 2장 더블" },
-            { name: "한우 불고기버거", single: 8600, set: 10500, desc: "한우 패티" },
-            { name: "전주 비빔라이스버거", single: 6900, set: 8800, desc: "라이스번+매콤 소스" }
+            { name: "클래식치즈버거", single: 5300, set: 7500, desc: "기본 치즈버거" },
+            { name: "더블클래식치즈버거", single: 7000, set: 9000, desc: "패티 2장 더블" },
+            { name: "한우불고기버거", single: 8600, set: 10500, desc: "한우 패티" },
+            { name: "전주비빔라이스버거", single: 6900, set: 8800, desc: "라이스번+매콤 소스" }
         ],
         dessertChicken: [
             { name: "포테이토", singlePrice: 3700, setUpcharge: 0 },
